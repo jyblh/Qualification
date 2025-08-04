@@ -75,64 +75,40 @@
   </div>
 
   <script>
-  async function checkAdmission() {
-    const id = document.getElementById("idInput").value.trim();
-    const email = document.getElementById("emailInput").value.trim();
-    const resultDiv = document.getElementById("result");
+    async function checkAdmission() {
+      const id = document.getElementById("idInput").value.trim();
+      const email = document.getElementById("emailInput").value.trim();
+      const resultDiv = document.getElementById("result");
 
-    if (!id || !email) {
-      resultDiv.innerHTML = "⚠️ 請完整輸入統一編號與 Email。";
-      return;
-    }
-
-    resultDiv.innerHTML = "⏳ 查詢中...";
-
-    try {
-      const res = await fetch("https://script.google.com/macros/s/AKfycbwykjEgNadi5xRaOkmHnq8QNXSpwySeoG1y_cOcSjPVVVDpC4ZznaKN_N9qiiDNY9IA2A/exec" +
-        `?id=${encodeURIComponent(id)}&email=${encodeURIComponent(email)}`);
-      const data = await res.json();
-
-      switch (data.status) {
-        case "success":
-          resultDiv.innerHTML = `
-            ✅ <strong>${data.company}</strong> 已錄取！<br><br>
-            📌 報名項目：${data.item}<br>
-            📌 錄取狀態：${data.admission}
-          `;
-          break;
-        case "waitlist":
-          resultDiv.innerHTML = `
-            ⛳ <strong>${data.company}</strong> 為備取<br><br>
-            📌 報名項目：${data.item}<br>
-            💬 ${data.message}
-          `;
-          break;
-        case "cancelled":
-          resultDiv.innerHTML = `
-            ❌ <strong>${data.company}</strong> 已取消參與<br><br>
-            📌 報名項目：${data.item}<br>
-            💬 ${data.message}
-          `;
-          break;
-        case "unknown":
-          resultDiv.innerHTML = `
-            ⚠️ <strong>${data.company}</strong> 狀態異常<br><br>
-            📌 狀態：${data.admission}<br>
-            💬 ${data.message}
-          `;
-          break;
-        case "not_found":
-          resultDiv.innerHTML = "❌ 查無資料，請確認統一編號與 Email 是否正確。";
-          break;
-        default:
-          resultDiv.innerHTML = "🚫 系統錯誤，請稍後再試。";
+      if (!id || !email) {
+        resultDiv.innerHTML = "⚠️ 請完整輸入統一編號與 Email。";
+        return;
       }
 
-    } catch (err) {
-      resultDiv.innerHTML = "🚫 查詢失敗，請稍後再試。";
+      resultDiv.innerHTML = "⏳ 查詢中...";
+
+      try {
+        const res = await fetch("https://script.google.com/macros/s/AKfycbz5jdK0t9pf8f7Sth1UaxuJY7vVNuZ5XxP7KX_eP4LC7UhIYo_GErGFmac1gIdW2JB1/exec" +
+          `?id=${encodeURIComponent(id)}&email=${encodeURIComponent(email)}`);
+        const data = await res.json();
+
+        if (data.status === "success") {
+          const statusText = data.admission.includes("備取")
+            ? `⛳ <strong>${data.company}</strong> 備取通知\n\n`
+            : `✅ <strong>${data.company}</strong> 已錄取！\n\n`;
+
+          resultDiv.innerHTML = statusText +
+            `📌 報名項目：${data.item}\n` +
+            `📌 錄取狀態：${data.admission}`;
+        } else {
+          resultDiv.innerHTML = "❌ 查無資料，請確認統一編號與 Email 是否正確。";
+        }
+
+      } catch (err) {
+        resultDiv.innerHTML = "🚫 查詢失敗，請稍後再試。";
+      }
     }
-  }
-</script>
+  </script>
 </body>
 
 </html>
