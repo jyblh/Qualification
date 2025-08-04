@@ -1,62 +1,138 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>尚未開放查詢</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>企業錄取查詢系統</title>
   <style>
     body {
-      font-family: 'Noto Sans TC', sans-serif;
-      background-color: #fffdf9;
+      background: #f7f9fb;
+      font-family: "Noto Sans TC", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       margin: 0;
-      padding: 0;
     }
+
     .container {
-      max-width: 640px;
-      margin: 80px auto;
-      padding: 40px;
-      background: #fffaf5;
+      background: #ffffff;
+      padding: 32px;
       border-radius: 16px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      width: 100%;
+      max-width: 480px;
       text-align: center;
-      border: 1px solid #f1e9dc;
     }
-    h1 {
-      color: #8b4513;
-      font-size: 24px;
-      margin-bottom: 16px;
-    }
-    p {
-      font-size: 16px;
-      color: #5c4b2a;
-      line-height: 1.8;
+
+    h2 {
+      color: #2c3e50;
       margin-bottom: 24px;
     }
-    .button {
-      display: inline-block;
-      padding: 12px 24px;
-      background-color: #8b4513;
-      color: #fff;
-      border-radius: 30px;
-      text-decoration: none;
-      font-weight: bold;
+
+    input {
+      width: 80%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
       font-size: 16px;
-      transition: background-color 0.3s;
     }
-    .button:hover {
-      background-color: #a05a25;
+
+    button {
+      padding: 10px 24px;
+      font-size: 16px;
+      background-color: #3c8dbc;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2b6fa3;
+    }
+
+    #result {
+      margin-top: 24px;
+      text-align: left;
+      white-space: pre-line;
+      font-size: 15px;
+      line-height: 1.6;
     }
   </style>
 </head>
-<body>
 
+<body>
   <div class="container">
-    <h1>🔒 尚未開放查詢</h1>
-    <p>目前查詢系統尚未開放，預計於 <strong>8 月 4 日</strong> 起開放查詢。<br>
-如有相關疑問，歡迎聯繫主辦單位。</p>
-    <a class="button" href="https://rnd.ntut.edu.tw/p/412-1042-18113.php?Lang=zh-tw">回活動首頁</a>
+    <h2>📋 活動錄取查詢</h2>
+    <input type="text" id="idInput" placeholder="請輸入統一編號">
+    <br>
+    <input type="email" id="emailInput" placeholder="請輸入報名時的 Email">
+    <br>
+    <button onclick="checkAdmission()">查詢</button>
+    <div id="result"></div>
   </div>
 
+  <script>
+  async function checkAdmission() {
+    const id = document.getElementById("idInput").value.trim();
+    const email = document.getElementById("emailInput").value.trim();
+    const resultDiv = document.getElementById("result");
+
+    if (!id || !email) {
+      resultDiv.innerHTML = "⚠️ 請完整輸入統一編號與 Email。";
+      return;
+    }
+
+    resultDiv.innerHTML = "⏳ 查詢中...";
+
+    try {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwykjEgNadi5xRaOkmHnq8QNXSpwySeoG1y_cOcSjPVVVDpC4ZznaKN_N9qiiDNY9IA2A/exec" +
+        `?id=${encodeURIComponent(id)}&email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+
+      switch (data.status) {
+        case "success":
+          resultDiv.innerHTML = `
+            ✅ <strong>${data.company}</strong> 已錄取！<br><br>
+            📌 報名項目：${data.item}<br>
+            📌 錄取狀態：${data.admission}
+          `;
+          break;
+        case "waitlist":
+          resultDiv.innerHTML = `
+            ⛳ <strong>${data.company}</strong> 為備取<br><br>
+            📌 報名項目：${data.item}<br>
+            💬 ${data.message}
+          `;
+          break;
+        case "cancelled":
+          resultDiv.innerHTML = `
+            ❌ <strong>${data.company}</strong> 已取消參與<br><br>
+            📌 報名項目：${data.item}<br>
+            💬 ${data.message}
+          `;
+          break;
+        case "unknown":
+          resultDiv.innerHTML = `
+            ⚠️ <strong>${data.company}</strong> 狀態異常<br><br>
+            📌 狀態：${data.admission}<br>
+            💬 ${data.message}
+          `;
+          break;
+        case "not_found":
+          resultDiv.innerHTML = "❌ 查無資料，請確認統一編號與 Email 是否正確。";
+          break;
+        default:
+          resultDiv.innerHTML = "🚫 系統錯誤，請稍後再試。";
+      }
+
+    } catch (err) {
+      resultDiv.innerHTML = "🚫 查詢失敗，請稍後再試。";
+    }
+  }
+</script>
 </body>
+
 </html>
